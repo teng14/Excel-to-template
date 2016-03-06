@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Excel转换工具</title>
+	
+	<style type="text/css">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		body{
+			font-size: 12px;
+		}
+		.clearfix:after{content:".";display:block;height:0;clear:both;visibility:hidden}
+		.clearfix{*+height:1%;}
+		aside{
+			padding: 10;
+			width:  400px;
+			height: 100%
+		}
+		aside h3{
+			height: 30px;
+			line-height: 30px;
+			padding-bottom: 10px;
+			font-size: 16px;
+			font-weight: bold;
+		}
+		aside .box-btn{
+			padding: 0 10px;
+			clear: both;
+		}
+		aside .template{
+			padding: 10px;
+		}
+		#template{
+			padding: 10px;
+			height: 500px;
+			width: 100%;
+			box-sizing: border-box;
+			overflow-x: auto;
+		}
+		#getFile{
+			float: left;
+			width: 74px;
+		}
+		#submit{
+			float: right;
+			padding: 0 10px;
+		}
+		section{
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 410px;
+			right: 10px;
+			height: 100%;
+			overflow-y: auto;
+		}
+		section h3{
+			height: 64px;
+			line-height: 76px;
+		}
+		#show-code{
+			position: absolute;
+			padding: 10px;
+			left: 0;
+			right: 0;
+			top: 64px;
+			bottom: 10px;
+			border: 1px solid #999;
+			overflow: auto;
+		}
+		#show-code .syntaxhighlighter{
+			height: 100%;
+		}
+		.tips{
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			display: block;
+			text-align: center;
+			font-size: 30px;
+		}
+	</style>
+	<script src="/js/jquery-2.1.1.min.js"></script>
+	<script src="/js/jquery.form.js"></script>
+
+
+	  <script type="text/javascript" src="/js/brush.js"></script>
+<link type="text/css" rel="stylesheet" href="/css/shCore.css"/>
+<link type="text/css" rel="stylesheet" href="/css/shThemeDefault.css"/>
+	<script type="text/javascript">
+		SyntaxHighlighter.config.clipboardSwf = '/js/clipboard.swf';
+		SyntaxHighlighter.all();
+	</script>
+
+</head>
+<body>
+	<div id="wrap">
+		<div id="tips"></div>
+		<aside>
+		<form id="fromInput" method="post" action="/handle" enctype="multipart/form-data">
+			<div class="template">
+				<h3>模板</h3>
+				<textarea name="code" id="template" class="html"></textarea>
+				
+			</div>
+			<div class="box-btn clearfix">
+				<p>
+					<label for="btn-choose"></label><input id="getFile" name="excelfile" type="file" accept="xls,xlsx" value="选取Excel">
+					<label for="submit"></label><input id="submit" type="submit" name="submit" value="生成">
+				</p>
+			</div>
+			<div style="padding: 10px; margin:15px 0; line-height: 30px; clear: both;" class="clearfix">
+				<p style="font-weight: bold">模板说明</p>
+				<p>例子： 匹配 name</p>
+				<pre class="brush: html;"><div><h1>{title}</h1><p>{content}</p></div></pre>
+				<p>例子： 匹配列</p>
+				<pre class="brush: html;"><div><h1>{1}</h1><p>{2}</p></div></pre>
+			</div>
+		</form>
+		</aside>
+		<section>
+			<h3>生成内容</h3>
+			<div id="show-code">
+			</div>
+			
+		</section>
+	</div>
+
+	<script>
+		$(function(){
+			//请求
+			$('#fromInput').submit(function(){
+				var showCode = $('#show-code');
+				var template = $('#template').val();
+				var filesPath = $('#getFile').val();
+				var hastemp= false;								 
+				$(this).ajaxSubmit({
+					beforeSubmit: function(){
+						var ext = GetExtensionFileName(filesPath);
+						var matchs = template.match(/\{[a-zA-Z0-9]+\}/gi);
+						if(matchs == null || matchs == '' || matchs == 'undefined'){
+							showCode.html('<span class="tips" style="color:#ff0000">请输入模板内容！！！</span>');
+							return false
+						}else{
+							for(var j = 0 ; j < matchs.length ;j++){
+							 	var re_match = matchs[j].replace(/[\{\}]/gi,"");
+							 	if(re_match == ''){
+							 		showCode.html('<span class="tips" style="color:#ff0000">请输入模板或者模板有错！！！</span>');
+							 		return false;
+							 	}else{
+							 		hastemp = true;
+							 	}
+							 }
+						};
+						if(ext != 'xlsx'){
+							showCode.html('<span class="tips" style="color:#ff0000">请选择.xlsx文件</span>');
+							return false;
+						}
+						if(ext == 'xlsx' && hastemp){
+							showCode.html('<span class="tips">数据请求中...</span>');
+							return true;
+						}
+					},
+					success: function(data){
+						var html = dataTemplate(template,data);
+						showCode.html('<pre style="height: 1000px;"  class="brush: html;">'+html+'</pre>');
+						SyntaxHighlighter.highlight()						
+					}
+				});
+				return false;
+			})
+		})
+
+		//判断后缀名
+		function GetExtensionFileName(pathfilename){
+			var reg = /(\\+)/g;
+			var pfn = pathfilename.replace(reg, "#");
+			var arrpfn = pfn.split("#");
+			var fn = arrpfn[arrpfn.length - 1];
+			var arrfn = fn.split(".");
+			return arrfn[arrfn.length - 1];
+		}
+
+		/**
+		一个用作js模板替换的代码
+		template格式和数组格式如下
+		var template = "<div><h1>{title}</h1><p>{content}</p></div>";
+
+		var data = [{title:"a",content:"aaaa"},{title:"b",content:"bbb"},{title:"c",content:"ccc"}];
+		只需要数据格式对应
+
+		以数字匹配 template = "<div><h1>{1}</h1><p>{2}</p></div>";
+		var data = [["内容", "内容"],["内容", "内容"]];
+		*/
+		var dataTemplate = function(template,data){
+		    var outPrint="";
+		    for(var i = 0 ; i < data.length ; i++){
+		        var matchs = template.match(/\{[a-zA-Z0-9]+\}/gi);
+		        var temp="";
+		        for(var j = 0 ; j < matchs.length ;j++){
+		            if(temp == "")
+		                temp = template;
+		            var re_match = matchs[j].replace(/[\{\}]/gi,"");
+		            //如果模板是以数字来匹配就-1；
+		            if(!isNaN(re_match)){
+		            	re_match = parseInt(re_match)-1;
+		            }
+		            temp = temp.replace(matchs[j],data[i][re_match])+'\n';
+		        }
+		        outPrint += temp;
+		    }
+		    return outPrint;
+		};
+
+	</script>
+</body>
+</html>

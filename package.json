@@ -1,0 +1,29 @@
+{
+  "name": "node-excel",
+  "version": "1.0.0",
+  "description": "读取Excel文件并解析，输出新的展现形式。可以给编辑人员输出HTML格式插入网页中，等等",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teng14"
+  },
+  "keywords": [
+    "node",
+    "excel",
+    "html",
+    "excel",
+    "transform",
+    "html"
+  ],
+  "author": "Teng",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "express": "^4.13.4",
+    "multer": "^0.1.8",
+    "node-xlsx": "^0.6.0"
+  }
+}
