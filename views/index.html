@@ -109,7 +109,7 @@
 			<div class="box-btn clearfix">
 				<p>
 					<label for="btn-choose"></label><input id="getFile" name="excelfile" type="file" accept="xls,xlsx" value="选取Excel">
-					<label for="submit"></label><input id="submit" type="submit" name="submit" value="生成">
+					<label for="submit"></label><input id="submit" type="button" name="submit" value="生成" data-type="1">
 				</p>
 			</div>
 			<div style="padding: 10px; margin:15px 0; line-height: 30px; clear: both;" class="clearfix">
@@ -132,49 +132,92 @@
 	<script>
 		$(function(){
 			//请求
-			$('#fromInput').submit(function(){
-				var showCode = $('#show-code');
-				var template = $('#template').val();
-				var filesPath = $('#getFile').val();
-				var hastemp= false;								 
-				$(this).ajaxSubmit({
-					beforeSubmit: function(){
-						var ext = GetExtensionFileName(filesPath);
-						var matchs = template.match(/\{[a-zA-Z0-9]+\}/gi);
+			$('#fromInput').on('click', '#submit',function(){
+				var form = $('#fromInput')
+					_type = $(this).attr('data-type');
+				getExcel(form, _type)
+				return false;
+			});
+		});
+		/**
+		 * [getExcel 解析Excel文件]
+		 * @param  {[string]} ele  [Form元素]
+		 * @param  {[num]} type [获取类型:1、获取获取Excel，按照模板输出； 2、获取Excel文件前2条内容输出作为参照；]
+		 * @return {[type]}      [description]
+		 */
+		function getExcel(ele,type){
+			var errMsg = {
+			emptyTemp 	: '<span class="tips" style="color:#ff0000">请输入模板内容！！！</span>', 
+			errTemp 	: '<span class="tips" style="color:#ff0000">模板格式有错！！！</span>', 
+			emptyfile 	: '<span class="tips" style="color:#ff0000">请选择.xlsx文件!!</span>', 
+			sendMsg 	: '<span class="tips">数据请求中...</span>'
+			}
+			var showCode  = $('#show-code');
+			var tips      = $('#tips');
+			var template  = $('#template').val();
+			var filesPath = $('#getFile').val();
+			var hastemp   = false;		
+			ele.ajaxSubmit({
+				beforeSubmit: function(){
+					var ext = GetExtensionFileName(filesPath);
+					var matchs = template.match(/\{[a-zA-Z0-9]+\}/gi);
+					/*
+						判断是否为Excel文件
+					 */
+					if(ext != 'xlsx'){
+						showCode.html(errMsg.emptyfile);
+						return false;
+					};
+					
+					/*
+						类型判断
+					 */
+					if(type == 1){
 						if(matchs == null || matchs == '' || matchs == 'undefined'){
-							showCode.html('<span class="tips" style="color:#ff0000">请输入模板内容！！！</span>');
+							showCode.html(errMsg.emptyTemp);
 							return false
 						}else{
 							for(var j = 0 ; j < matchs.length ;j++){
 							 	var re_match = matchs[j].replace(/[\{\}]/gi,"");
 							 	if(re_match == ''){
-							 		showCode.html('<span class="tips" style="color:#ff0000">请输入模板或者模板有错！！！</span>');
+							 		showCode.html(errMsg.errTemp);
 							 		return false;
-							 	}else{
-							 		hastemp = true;
-							 	}
-							 }
+							 	};
+							};
 						};
-						if(ext != 'xlsx'){
-							showCode.html('<span class="tips" style="color:#ff0000">请选择.xlsx文件</span>');
-							return false;
-						}
-						if(ext == 'xlsx' && hastemp){
-							showCode.html('<span class="tips">数据请求中...</span>');
-							return true;
-						}
-					},
-					success: function(data){
-						var html = dataTemplate(template,data);
-						showCode.html('<pre style="height: 1000px;"  class="brush: html;">'+html+'</pre>');
-						SyntaxHighlighter.highlight()						
-					}
-				});
-				return false;
-			})
-		})
 
-		//判断后缀名
+					};
+					showCode.html(errMsg.sendMsg);	
+				},
+				success: function(data){
+					var html= "";
+					if(type == 1){
+						html = dataTemplate(template,data);
+						showCode.html('<pre style="height: 1000px;"  class="brush: html;">'+html+'</pre>');
+						SyntaxHighlighter.highlight();
+					}else{
+						html = dataTemplate(template,data);
+						for(var i = 0; i < data[0].length; i++){
+							if(i==2 || data[0].length<2){
+								return false;
+							};
+
+						}
+						html = ''
+						showCode.html('<pre style="height: 1000px;"  class="brush: html;">'+html+'</pre>');
+						SyntaxHighlighter.highlight();
+					};
+					
+					
+											
+				}
+			});
+		}
+		/**
+		 * 判断后缀名
+		 * [GetExtensionFileName description]
+		 * @param {[type]} pathfilename [description]
+		 */
 		function GetExtensionFileName(pathfilename){
 			var reg = /(\\+)/g;
 			var pfn = pathfilename.replace(reg, "#");
@@ -185,17 +228,19 @@
 		}
 
 		/**
-		一个用作js模板替换的代码
-		template格式和数组格式如下
-		var template = "<div><h1>{title}</h1><p>{content}</p></div>";
+		 *template格式和数组格式如下
+		 *var template = "<div><h1>{title}</h1><p>{content}</p></div>";
+		 *var data = [{title:"a",content:"aaaa"},{title:"b",content:"bbb"},{title:"c",content:"ccc"}];
+		 *只需要数据格式对应
 
-		var data = [{title:"a",content:"aaaa"},{title:"b",content:"bbb"},{title:"c",content:"ccc"}];
-		只需要数据格式对应
-
-		以数字匹配 template = "<div><h1>{1}</h1><p>{2}</p></div>";
-		var data = [["内容", "内容"],["内容", "内容"]];
-		*/
-		var dataTemplate = function(template,data){
+		 *以数字（列）匹配 template = "<div><h1>{1}</h1><p>{2}</p></div>";
+		 *var data = [["内容", "内容"],["内容", "内容"]];
+		 * [dataTemplate description]
+		 * @param  {[type]} template [description]
+		 * @param  {[type]} data     [description]
+		 * @return {[type]}          [description]
+		 */
+		dataTemplate = function(template,data){
 		    var outPrint="";
 		    for(var i = 0 ; i < data.length ; i++){
 		        var matchs = template.match(/\{[a-zA-Z0-9]+\}/gi);
