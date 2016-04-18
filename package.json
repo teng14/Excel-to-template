@@ -26,5 +26,8 @@
     "ejs": "2.4.1 ",
     "multer": "^0.1.8",
     "node-xlsx": "^0.6.0"
+  },
+  "devDependencies": {
+    "cheerio": "^0.20.0"
   }
 }

@@ -192,6 +192,9 @@
 				success: function(data){
 					var html= "";
 					if(type == 1){
+						//获取远程资源
+
+
 						html = dataTemplate(template,data);
 						showCode.html('<pre style="height: 1000px;"  class="brush: html;">'+html+'</pre>');
 						SyntaxHighlighter.highlight();
@@ -206,9 +209,7 @@
 						html = ''
 						showCode.html('<pre style="height: 1000px;"  class="brush: html;">'+html+'</pre>');
 						SyntaxHighlighter.highlight();
-					};
-					
-					
+					};	
 											
 				}
 			});
