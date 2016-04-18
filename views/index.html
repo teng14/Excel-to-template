@@ -118,6 +118,24 @@
 				<pre class="brush: html;"><div><h1>{title}</h1><p>{content}</p></div></pre>
 				<p>例子： 匹配列</p>
 				<pre class="brush: html;"><div><h1>{1}</h1><p>{2}</p></div></pre>
+				<p>例子： 匹配列</p>
+				<pre class="brush: html;">
+					<div class="pro" onMouseOver="mouseOver($(this))" onMouseOut="mouseOut($(this))">
+						<p class="pic">
+						<a href="{6}">
+						<img src="{8}_300X300" /></a>
+						<a class="bottons tcenter" href="{6}">即将开始</a> </p>
+						<p class="proname tleft">
+						<a href="{6}">{1}</a> </p>
+						<p class="company">{3}</p>
+						<p class="pro_info tleft">{2}<span class="red"></span></p>
+						<p class="bottoms">
+						<span class="price tleft"name="price">¥{5}<em class="price_del">¥{4}</em></span>
+						 <span class="goodsid" ref="{7}"></span>
+						<span><a class="buynow" href="{6}">马上抢</a></span> </p>
+					</div>
+				</pre>
+
 			</div>
 		</form>
 		</aside>
@@ -190,11 +208,9 @@
 					showCode.html(errMsg.sendMsg);	
 				},
 				success: function(data){
-					var html= "";
+					var html;
 					if(type == 1){
 						//获取远程资源
-
-
 						html = dataTemplate(template,data);
 						showCode.html('<pre style="height: 1000px;"  class="brush: html;">'+html+'</pre>');
 						SyntaxHighlighter.highlight();
@@ -254,7 +270,7 @@
 		            if(!isNaN(re_match)){
 		            	re_match = parseInt(re_match)-1;
 		            }
-		            temp = temp.replace(matchs[j],data[i][re_match])+'\n';
+		            temp = temp.replace(matchs[j],data[i][re_match]);
 		        }
 		        outPrint += temp;
 		    }

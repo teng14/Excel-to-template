@@ -13,27 +13,27 @@ module.exports = function(app){
 			objExcel = xlsx.parse(filePath);
 			//获取Excel 第一张表
 			//返回JSON数据
-			var getResourseArray=[];
+			var j =0;
 			for(var i=0; i< objExcel[0].data.length; i++){
 				var url = objExcel[0].data[i][objExcel[0].data[i].length-1]
-				var j = i;
 				server.download(url, function(data) {
+					j++
 				  if (data) {
 				    var ___ = cheerio.load(data);
 					var goodsId = ___('#GoodsId').val();
 					var imgUrl = ___('.bigimg').attr('src');
-					console.log(goodsId)
-					//objExcel[0].data[0].push('34321');
-					// objExcel[0].data[1].imgurl = imgUrl;
-				    console.log("done");
+					objExcel[0].data[j-1].push(goodsId);
+					objExcel[0].data[j-1].push(getImgUrl(imgUrl));
+					if(j==objExcel[0].data.length){
+						res.json(objExcel[0].data);
+					}	
 				  } else {
 				      console.log("error");
 				  } 
 				});
 			}
 			// objExcel[0].data[0].goodsid = 111
-			//console.log(objExcel[0].data)
-			res.json(objExcel[0].data);
+			
 			//res.send(200)
 		}
 	});
